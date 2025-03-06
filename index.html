@@ -7,7 +7,6 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.151.3/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.151.3/examples/js/controls/PointerLockControls.js"></script>
   <style>
     * {
       margin: 0;
@@ -389,6 +388,9 @@
     // Initialize WebsimSocket for multiplayer
     const room = new WebsimSocket();
     
+    // Import PointerLockControls from the Three.js modules
+    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+    
     // Utility functions
     const getRandomInt = (min, max) => {
       return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -692,7 +694,7 @@
         camera.position.y = 0.8;
         
         // Create PointerLockControls
-        const controls = new THREE.PointerLockControls(camera, renderer.domElement);
+        const controls = new PointerLockControls(camera, renderer.domElement);
         let movementSpeed = 0.1;
         
         // Add event listeners for keyboard input
