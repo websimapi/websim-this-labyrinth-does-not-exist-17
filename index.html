@@ -1,0 +1,1137 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>This Labyrinth Does Not Exist</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.151.3/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.151.3/examples/js/controls/PointerLockControls.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #0f0f1a;
+      color: #f0f0f0;
+      overflow-x: hidden;
+    }
+    
+    #app {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100%;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px 0;
+      border-bottom: 1px solid #2a2a3a;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(45deg, #7e68f9, #00d4ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #aaa;
+      font-size: 1.1rem;
+    }
+    
+    .nav-tabs {
+      display: flex;
+      margin-bottom: 30px;
+      border-bottom: 1px solid #2a2a3a;
+    }
+    
+    .nav-tab {
+      padding: 12px 25px;
+      background: none;
+      border: none;
+      color: #aaa;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    
+    .nav-tab.active {
+      color: #fff;
+    }
+    
+    .nav-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(45deg, #7e68f9, #00d4ff);
+    }
+    
+    .generate-form {
+      background-color: #1a1a2e;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      margin-bottom: 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #ccc;
+    }
+    
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 12px 15px;
+      background-color: #232341;
+      border: 1px solid #2c2c52;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: #7e68f9;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(126, 104, 249, 0.2);
+    }
+    
+    .btn {
+      padding: 12px 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(45deg, #7e68f9, #00d4ff);
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-secondary {
+      background-color: #232341;
+      color: #ccc;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #2c2c52;
+    }
+    
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 25px;
+    }
+    
+    .labyrinth-card {
+      background-color: #1a1a2e;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    
+    .labyrinth-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+    
+    .labyrinth-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-bottom: 1px solid #2a2a3a;
+    }
+    
+    .labyrinth-details {
+      padding: 15px;
+    }
+    
+    .labyrinth-title {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      background: linear-gradient(45deg, #7e68f9, #00d4ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    .labyrinth-creator {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-bottom: 10px;
+    }
+    
+    .labyrinth-difficulty {
+      display: inline-block;
+      padding: 3px 10px;
+      background-color: #2c2c52;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      color: #fff;
+    }
+    
+    .difficulty-easy {
+      background-color: #4caf50;
+    }
+    
+    .difficulty-medium {
+      background-color: #ff9800;
+    }
+    
+    .difficulty-hard {
+      background-color: #f44336;
+    }
+    
+    .difficulty-nightmare {
+      background-color: #9c27b0;
+    }
+    
+    .labyrinth-view {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1000;
+    }
+    
+    .labyrinth-canvas {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .labyrinth-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+    
+    .control-btn {
+      width: 60px;
+      height: 60px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: #fff;
+      cursor: pointer;
+    }
+    
+    .control-btn:active {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .exit-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 15px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      color: #fff;
+      cursor: pointer;
+    }
+    
+    .click-to-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 20px 40px;
+      border-radius: 10px;
+      font-size: 1.2rem;
+      text-align: center;
+      cursor: pointer;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid #1a1a2e;
+      border-top: 5px solid #7e68f9;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    .loading-text {
+      font-size: 1.2rem;
+      color: #fff;
+    }
+    
+    .progress-bar {
+      width: 300px;
+      height: 8px;
+      background-color: #1a1a2e;
+      border-radius: 4px;
+      margin-top: 15px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(45deg, #7e68f9, #00d4ff);
+      width: 0%;
+      transition: width 0.5s;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      }
+      
+      .labyrinth-controls {
+        bottom: 40px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+      
+      .gallery {
+        grid-template-columns: 1fr;
+      }
+      
+      .nav-tab {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.151.3/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.151.3/examples/jsm/"
+      }
+    }
+  </script>
+  
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo, useSyncExternalStore } = React;
+    const root = ReactDOM.createRoot(document.getElementById('app'));
+    
+    // Initialize WebsimSocket for multiplayer
+    const room = new WebsimSocket();
+    
+    // Utility functions
+    const getRandomInt = (min, max) => {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    };
+    
+    // Labyrinth generation algorithms
+    const generateLabyrinth = (size, difficulty) => {
+      // Default size based on difficulty
+      let width, height;
+      switch (difficulty) {
+        case 'easy':
+          width = height = 10;
+          break;
+        case 'medium':
+          width = height = 15;
+          break;
+        case 'hard':
+          width = height = 20;
+          break;
+        case 'nightmare':
+          width = height = 25;
+          break;
+        default:
+          width = height = 15;
+      }
+      
+      // Initialize grid with walls
+      const grid = Array(height).fill().map(() => Array(width).fill(1));
+      
+      // Create a random path through the maze using recursive backtracking
+      const startX = 1;
+      const startY = 1;
+      grid[startY][startX] = 0; // Start position
+      
+      const stack = [{x: startX, y: startY}];
+      const directions = [
+        {x: 0, y: -2}, // North
+        {x: 2, y: 0},  // East
+        {x: 0, y: 2},  // South
+        {x: -2, y: 0}  // West
+      ];
+      
+      while (stack.length > 0) {
+        const current = stack[stack.length - 1];
+        
+        // Get possible directions to move
+        const possibleDirections = [];
+        for (const dir of directions) {
+          const newX = current.x + dir.x;
+          const newY = current.y + dir.y;
+          
+          if (
+            newX > 0 && newX < width - 1 &&
+            newY > 0 && newY < height - 1 &&
+            grid[newY][newX] === 1
+          ) {
+            possibleDirections.push(dir);
+          }
+        }
+        
+        if (possibleDirections.length > 0) {
+          // Choose a random direction
+          const randomIndex = Math.floor(Math.random() * possibleDirections.length);
+          const chosenDir = possibleDirections[randomIndex];
+          
+          // Move to the new cell
+          const newX = current.x + chosenDir.x;
+          const newY = current.y + chosenDir.y;
+          
+          // Remove the wall between the current cell and the new cell
+          grid[current.y + chosenDir.y / 2][current.x + chosenDir.x / 2] = 0;
+          grid[newY][newX] = 0;
+          
+          // Push the new cell to the stack
+          stack.push({x: newX, y: newY});
+        } else {
+          // Backtrack
+          stack.pop();
+        }
+      }
+      
+      // Set end point at a distance from start
+      let endX = width - 2;
+      let endY = height - 2;
+      grid[endY][endX] = 2; // End position
+      
+      return grid;
+    };
+    
+    // Component to display loading screen
+    const LoadingOverlay = ({ progress, stage }) => {
+      return (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">{stage}</div>
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+          </div>
+        </div>
+      );
+    };
+    
+    // Component for the labyrinth generator form
+    const GeneratorForm = ({ onGenerate, isGenerating }) => {
+      const [theme, setTheme] = useState("");
+      const [difficulty, setDifficulty] = useState("medium");
+      const [audioFile, setAudioFile] = useState(null);
+      
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!theme) return;
+        
+        onGenerate({
+          theme,
+          difficulty,
+          audioFile
+        });
+      };
+      
+      const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          try {
+            const url = await websim.upload(file);
+            setAudioFile(url);
+          } catch (error) {
+            console.error('Error uploading audio file:', error);
+          }
+        }
+      };
+      
+      return (
+        <form className="generate-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="theme">Theme</label>
+            <input
+              type="text"
+              id="theme"
+              placeholder="e.g. Ancient Ruins, Cosmic Horror, Enchanted Forest"
+              value={theme}
+              onChange={e => setTheme(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="difficulty">Difficulty</label>
+            <select
+              id="difficulty"
+              value={difficulty}
+              onChange={e => setDifficulty(e.target.value)}
+            >
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+              <option value="nightmare">Nightmare</option>
+            </select>
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="audio">Background Music (optional)</label>
+            <input
+              type="file"
+              id="audio"
+              accept="audio/*"
+              onChange={handleFileChange}
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            disabled={isGenerating}
+          >
+            {isGenerating ? 'Generating...' : 'Generate Labyrinth'}
+          </button>
+        </form>
+      );
+    };
+    
+    // Component for gallery of labyrinths
+    const Gallery = ({ labyrinths, onSelect }) => {
+      return (
+        <div className="gallery">
+          {labyrinths.map(labyrinth => (
+            <div
+              key={labyrinth.id}
+              className="labyrinth-card"
+              onClick={() => onSelect(labyrinth)}
+            >
+              <img 
+                src={labyrinth.previewImage || "https://via.placeholder.com/400x300?text=Labyrinth"} 
+                alt={labyrinth.theme}
+                className="labyrinth-img"
+              />
+              <div className="labyrinth-details">
+                <h3 className="labyrinth-title">{labyrinth.theme}</h3>
+                <p className="labyrinth-creator">Created by {labyrinth.username}</p>
+                <span className={`labyrinth-difficulty difficulty-${labyrinth.difficulty}`}>
+                  {labyrinth.difficulty.charAt(0).toUpperCase() + labyrinth.difficulty.slice(1)}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    };
+    
+    // Component for 3D labyrinth exploration
+    const LabyrinthExplorer = ({ labyrinth, onExit }) => {
+      const containerRef = useRef();
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+      const audioRef = useRef(null);
+      
+      useEffect(() => {
+        if (!isPlaying) return;
+        
+        // Setup THREE.js scene
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setClearColor(0x000000);
+        containerRef.current.appendChild(renderer.domElement);
+        
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+        
+        const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+        pointLight.position.set(0, 5, 0);
+        scene.add(pointLight);
+        
+        // Add fog for atmosphere
+        scene.fog = new THREE.FogExp2(0x000000, 0.05);
+        
+        // Load textures for biomes
+        const textureLoader = new THREE.TextureLoader();
+        const wallMaterials = labyrinth.biomes.map(biome => {
+          if (biome.textureUrl) {
+            const texture = textureLoader.load(biome.textureUrl);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(1, 1);
+            return new THREE.MeshStandardMaterial({ map: texture, roughness: 0.8 });
+          } else {
+            return new THREE.MeshStandardMaterial({ 
+              color: biome.color || 0x888888,
+              roughness: 0.8
+            });
+          }
+        });
+        
+        // Generate floor and ceiling
+        const floorGeometry = new THREE.PlaneGeometry(labyrinth.grid[0].length * 2, labyrinth.grid.length * 2);
+        const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.9 });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -1;
+        scene.add(floor);
+        
+        const ceilingGeometry = new THREE.PlaneGeometry(labyrinth.grid[0].length * 2, labyrinth.grid.length * 2);
+        const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+        const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+        ceiling.rotation.x = Math.PI / 2;
+        ceiling.position.y = 2;
+        scene.add(ceiling);
+        
+        // Build maze walls from the grid
+        const wallGeometry = new THREE.BoxGeometry(1, 3, 1);
+        
+        for (let y = 0; y < labyrinth.grid.length; y++) {
+          for (let x = 0; x < labyrinth.grid[y].length; x++) {
+            if (labyrinth.grid[y][x] === 1) { // Wall
+              // Determine which biome this cell belongs to
+              const distanceFromStart = Math.sqrt(Math.pow(x - 1, 2) + Math.pow(y - 1, 2));
+              const maxDistance = Math.sqrt(
+                Math.pow(labyrinth.grid[0].length - 2, 2) + 
+                Math.pow(labyrinth.grid.length - 2, 2)
+              );
+              const biomeIndex = Math.min(
+                Math.floor((distanceFromStart / maxDistance) * labyrinth.biomes.length),
+                labyrinth.biomes.length - 1
+              );
+              
+              const wall = new THREE.Mesh(wallGeometry, wallMaterials[biomeIndex]);
+              wall.position.x = x - labyrinth.grid[0].length / 2;
+              wall.position.z = y - labyrinth.grid.length / 2;
+              wall.position.y = 0.5;
+              scene.add(wall);
+            }
+          }
+        }
+        
+        // Camera position and controls
+        camera.position.x = 1 - labyrinth.grid[0].length / 2;
+        camera.position.z = 1 - labyrinth.grid.length / 2;
+        camera.position.y = 0.8;
+        
+        // Create PointerLockControls
+        const controls = new THREE.PointerLockControls(camera, renderer.domElement);
+        let movementSpeed = 0.1;
+        
+        // Add event listeners for keyboard input
+        const keysPressed = {};
+        document.addEventListener('keydown', (event) => {
+          keysPressed[event.code] = true;
+        });
+        document.addEventListener('keyup', (event) => {
+          keysPressed[event.code] = false;
+        });
+        
+        // Lock controls on mousedown
+        if (controls.isLocked !== true) {
+          controls.lock();
+        }
+        
+        controls.addEventListener('lock', () => {
+          // Start audio playback
+          if (labyrinth.audioUrl && audioRef.current && !isAudioPlaying) {
+            audioRef.current.play();
+            setIsAudioPlaying(true);
+          }
+        });
+        
+        controls.addEventListener('unlock', () => {
+          // Nothing to do here, but could pause audio
+        });
+        
+        // Animation loop
+        const raycaster = new THREE.Raycaster();
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+        
+        function animate() {
+          requestAnimationFrame(animate);
+          
+          // Handle movement with collision detection
+          if (controls.isLocked === true) {
+            // Get direction vector
+            const oldPosition = camera.position.clone();
+            
+            velocity.x = 0;
+            velocity.z = 0;
+            
+            if (keysPressed['KeyW'] || keysPressed['ArrowUp']) {
+              velocity.z = -movementSpeed;
+            }
+            if (keysPressed['KeyS'] || keysPressed['ArrowDown']) {
+              velocity.z = movementSpeed;
+            }
+            if (keysPressed['KeyA'] || keysPressed['ArrowLeft']) {
+              velocity.x = -movementSpeed;
+            }
+            if (keysPressed['KeyD'] || keysPressed['ArrowRight']) {
+              velocity.x = movementSpeed;
+            }
+            
+            // Apply movement in camera direction
+            if (velocity.x !== 0 || velocity.z !== 0) {
+              direction.copy(velocity).normalize();
+              
+              // Forward/backward
+              if (velocity.z !== 0) {
+                controls.moveForward(velocity.z);
+              }
+              
+              // Left/right
+              if (velocity.x !== 0) {
+                controls.moveRight(velocity.x);
+              }
+              
+              // Collision detection
+              const cameraDirection = camera.getWorldDirection(new THREE.Vector3());
+              raycaster.set(camera.position, cameraDirection);
+              
+              const intersects = raycaster.intersectObjects(scene.children);
+              if (intersects.length > 0 && intersects[0].distance < 0.5) {
+                camera.position.copy(oldPosition);
+              }
+            }
+          }
+          
+          renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Mobile touch controls
+        const touchControls = document.createElement('div');
+        touchControls.className = 'labyrinth-controls';
+        touchControls.innerHTML = `
+          <div class="control-btn" id="forward">↑</div>
+          <div class="control-btn" id="left">←</div>
+          <div class="control-btn" id="backward">↓</div>
+          <div class="control-btn" id="right">→</div>
+        `;
+        containerRef.current.appendChild(touchControls);
+        
+        // Setup touch control listeners
+        const forwardBtn = document.getElementById('forward');
+        const leftBtn = document.getElementById('left');
+        const backwardBtn = document.getElementById('backward');
+        const rightBtn = document.getElementById('right');
+        
+        const handleTouchStart = (keyCode) => {
+          keysPressed[keyCode] = true;
+        };
+        
+        const handleTouchEnd = (keyCode) => {
+          keysPressed[keyCode] = false;
+        };
+        
+        forwardBtn.addEventListener('touchstart', () => handleTouchStart('KeyW'));
+        forwardBtn.addEventListener('touchend', () => handleTouchEnd('KeyW'));
+        
+        leftBtn.addEventListener('touchstart', () => handleTouchStart('KeyA'));
+        leftBtn.addEventListener('touchend', () => handleTouchEnd('KeyA'));
+        
+        backwardBtn.addEventListener('touchstart', () => handleTouchStart('KeyS'));
+        backwardBtn.addEventListener('touchend', () => handleTouchEnd('KeyS'));
+        
+        rightBtn.addEventListener('touchstart', () => handleTouchStart('KeyD'));
+        rightBtn.addEventListener('touchend', () => handleTouchEnd('KeyD'));
+        
+        // Add exit button
+        const exitBtn = document.createElement('button');
+        exitBtn.className = 'exit-btn';
+        exitBtn.innerText = 'Exit';
+        exitBtn.addEventListener('click', () => {
+          onExit();
+          
+          // Stop audio if playing
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            setIsAudioPlaying(false);
+          }
+        });
+        containerRef.current.appendChild(exitBtn);
+        
+        // Handle window resize
+        const handleResize = () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+        
+        window.addEventListener('resize', handleResize);
+        
+        // Cleanup on unmount
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          window.removeEventListener('keydown', handleTouchStart);
+          window.removeEventListener('keyup', handleTouchEnd);
+          
+          // Stop audio if playing
+          if (audioRef.current) {
+            audioRef.current.pause();
+            setIsAudioPlaying(false);
+          }
+          
+          // Remove all elements
+          while (containerRef.current.firstChild) {
+            containerRef.current.removeChild(containerRef.current.firstChild);
+          }
+          
+          // Dispose of THREE.js resources
+          renderer.dispose();
+          scene.traverse((object) => {
+            if (object.geometry) object.geometry.dispose();
+            if (object.material) {
+              if (Array.isArray(object.material)) {
+                object.material.forEach(material => material.dispose());
+              } else {
+                object.material.dispose();
+              }
+            }
+          });
+        };
+      }, [isPlaying, labyrinth]);
+      
+      return (
+        <div className="labyrinth-view">
+          <div ref={containerRef} className="labyrinth-canvas">
+            {!isPlaying && (
+              <div className="click-to-play" onClick={() => setIsPlaying(true)}>
+                Click to Explore<br />
+                <small>Use WASD or Arrow Keys to move, Mouse to look around</small>
+              </div>
+            )}
+          </div>
+          
+          {/* Audio player for background music */}
+          {labyrinth.audioUrl && (
+            <audio 
+              ref={audioRef}
+              src={labyrinth.audioUrl} 
+              loop 
+              style={{ display: 'none' }}
+            />
+          )}
+        </div>
+      );
+    };
+    
+    // Main App component
+    const App = () => {
+      const [activeTab, setActiveTab] = useState('generate');
+      const [isGenerating, setIsGenerating] = useState(false);
+      const [generationProgress, setGenerationProgress] = useState(0);
+      const [generationStage, setGenerationStage] = useState('');
+      const [selectedLabyrinth, setSelectedLabyrinth] = useState(null);
+      
+      // Sync with the external labyrinths store
+      const labyrinths = useSyncExternalStore(
+        room.collection('labyrinth').subscribe,
+        room.collection('labyrinth').getList
+      );
+      
+      // Generate a new labyrinth
+      const generateNewLabyrinth = async (config) => {
+        try {
+          setIsGenerating(true);
+          setGenerationProgress(10);
+          setGenerationStage('Generating maze structure...');
+          
+          // 1. Generate the maze grid structure
+          const grid = generateLabyrinth(null, config.difficulty);
+          
+          setGenerationProgress(20);
+          setGenerationStage('Creating labyrinth description...');
+          
+          // 2. Use LLM to generate a description and biomes
+          const completion = await websim.chat.completions.create({
+            messages: [
+              {
+                role: "system",
+                content: `You are a creative labyrinth designer. Based on a theme, create a detailed description of 
+                a labyrinth with 3-5 distinct biomes or areas. For each biome, provide a name, color scheme, and atmosphere. 
+                Respond directly with JSON, following this schema:
+                {
+                  "description": "Overall labyrinth description",
+                  "biomes": [
+                    {
+                      "name": "Biome name",
+                      "description": "Biome description",
+                      "color": "Primary hex color (e.g. #ff0000)"
+                    }
+                  ]
+                }`
+              },
+              {
+                role: "user",
+                content: `Create a labyrinth with the theme: "${config.theme}"`
+              }
+            ],
+            json: true
+          });
+          
+          let labyrinthData;
+          try {
+            labyrinthData = JSON.parse(completion.content);
+          } catch (e) {
+            console.error("Error parsing LLM response:", e);
+            labyrinthData = {
+              description: `A mysterious labyrinth with the theme: ${config.theme}`,
+              biomes: [
+                {
+                  name: "Entrance",
+                  description: "The starting area of the labyrinth",
+                  color: "#888888"
+                },
+                {
+                  name: "Center",
+                  description: "The heart of the labyrinth",
+                  color: "#555555"
+                }
+              ]
+            };
+          }
+          
+          setGenerationProgress(40);
+          setGenerationStage('Generating textures for biomes...');
+          
+          // 3. Generate textures for each biome
+          const biomesWithTextures = await Promise.all(
+            labyrinthData.biomes.map(async (biome, index) => {
+              try {
+                setGenerationProgress(40 + (index / labyrinthData.biomes.length) * 30);
+                
+                // Convert color name to hex if it's not already
+                let color = biome.color;
+                if (!color.startsWith('#')) {
+                  // Simple mapping for basic colors
+                  const colorMap = {
+                    red: '#ff0000',
+                    green: '#00ff00',
+                    blue: '#0000ff',
+                    yellow: '#ffff00',
+                    purple: '#800080',
+                    orange: '#ffa500',
+                    black: '#000000',
+                    white: '#ffffff',
+                    gray: '#808080',
+                    brown: '#a52a2a'
+                  };
+                  color = colorMap[color.toLowerCase()] || '#888888';
+                }
+                
+                // Generate texture image for this biome
+                const texturePrompt = `Texture for walls in a ${biome.name} area of a ${config.theme} themed labyrinth. Repeating pattern, seamless texture.`;
+                const textureResult = await websim.imageGen({
+                  prompt: texturePrompt,
+                  aspect_ratio: "1:1"
+                });
+                
+                return {
+                  ...biome,
+                  color,
+                  textureUrl: textureResult.url
+                };
+              } catch (error) {
+                console.error(`Error generating texture for biome ${biome.name}:`, error);
+                return {
+                  ...biome,
+                  color: biome.color || '#888888'
+                };
+              }
+            })
+          );
+          
+          setGenerationProgress(70);
+          setGenerationStage('Creating preview image...');
+          
+          // 4. Generate a preview image
+          let previewImage;
+          try {
+            const previewResult = await websim.imageGen({
+              prompt: `A dramatic, atmospheric view of a ${config.theme} themed labyrinth. No text, no people, fantasy art style.`,
+              aspect_ratio: "16:9"
+            });
+            previewImage = previewResult.url;
+          } catch (error) {
+            console.error('Error generating preview image:', error);
+            previewImage = null;
+          }
+          
+          setGenerationProgress(90);
+          setGenerationStage('Saving labyrinth...');
+          
+          // 5. Save the labyrinth to the database
+          const newLabyrinth = await room.collection('labyrinth').create({
+            theme: config.theme,
+            difficulty: config.difficulty,
+            description: labyrinthData.description,
+            biomes: biomesWithTextures,
+            grid: grid,
+            previewImage: previewImage,
+            audioUrl: config.audioFile || null,
+            created_at: new Date().toISOString()
+          });
+          
+          setGenerationProgress(100);
+          setGenerationStage('Labyrinth created!');
+          
+          // Switch to the gallery tab
+          setTimeout(() => {
+            setActiveTab('gallery');
+            setIsGenerating(false);
+          }, 1000);
+          
+        } catch (error) {
+          console.error('Error generating labyrinth:', error);
+          setIsGenerating(false);
+        }
+      };
+      
+      return (
+        <div className="container">
+          <header className="header">
+            <h1>This Labyrinth Does Not Exist</h1>
+            <p>Generate and explore procedurally created 3D labyrinths</p>
+          </header>
+          
+          {/* Tab navigation */}
+          {!selectedLabyrinth && (
+            <div className="nav-tabs">
+              <button 
+                className={`nav-tab ${activeTab === 'generate' ? 'active' : ''}`}
+                onClick={() => setActiveTab('generate')}
+              >
+                Generate New
+              </button>
+              <button 
+                className={`nav-tab ${activeTab === 'gallery' ? 'active' : ''}`}
+                onClick={() => setActiveTab('gallery')}
+              >
+                Gallery ({labyrinths.length})
+              </button>
+            </div>
+          )}
+          
+          {/* Main content area */}
+          {selectedLabyrinth ? (
+            <LabyrinthExplorer 
+              labyrinth={selectedLabyrinth} 
+              onExit={() => setSelectedLabyrinth(null)}
+            />
+          ) : (
+            <>
+              {activeTab === 'generate' && (
+                <GeneratorForm 
+                  onGenerate={generateNewLabyrinth}
+                  isGenerating={isGenerating}
+                />
+              )}
+              
+              {activeTab === 'gallery' && (
+                <Gallery 
+                  labyrinths={[...labyrinths].reverse()} 
+                  onSelect={setSelectedLabyrinth}
+                />
+              )}
+            </>
+          )}
+          
+          {/* Loading overlay */}
+          {isGenerating && (
+            <LoadingOverlay 
+              progress={generationProgress}
+              stage={generationStage}
+            />
+          )}
+        </div>
+      );
+    };
+    
+    root.render(<App />);
+  </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
